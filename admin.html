@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LinyuGameStudio - 开发者管理后台</title>
+  <!-- 引入外部资源 -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  
+  <!-- Tailwind 配置 -->
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            primary: '#165DFF',
+            secondary: '#7B61FF',
+            dark: '#0F172A',
+            light: '#F8FAFC',
+            accent: '#FF6B8B',
+            success: '#22C55E',
+            danger: '#EF4444',
+            warning: '#F59E0B',
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+            display: ['Montserrat', 'sans-serif'],
+          },
+        },
+      }
+    }
+  </script>
+  
+  <!-- 自定义工具类 -->
+  <style type="text/tailwindcss">
+    @layer utilities {
+      .content-auto {
+        content-visibility: auto;
+      }
+      .text-shadow {
+        text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      }
+      .text-gradient {
+        background-clip: text;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+      .bg-blur {
+        backdrop-filter: blur(8px);
+      }
+      .scrollbar-hide::-webkit-scrollbar {
+        display: none;
+      }
+      .scrollbar-hide {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+      }
+    }
+  </style>
+  
+  <!-- 额外样式 -->
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Montserrat:wght@500;600;700;800&display=swap');
+    
+    html {
+      scroll-behavior: smooth;
+    }
+    
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #F8FAFC;
+      color: #0F172A;
+    }
+    
+    .btn-primary {
+      background: linear-gradient(135deg, #165DFF 0%, #7B61FF 100%);
+      transition: all 0.3s ease;
+    }
+    
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px -5px rgba(22, 93, 255, 0.3);
+    }
+    
+    .btn-success {
+      background: linear-gradient(135deg, #10B981 0%, #22C55E 100%);
+      transition: all 0.3s ease;
+    }
+    
+    .btn-success:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px -5px rgba(34, 197, 94, 0.3);
+    }
+    
+    .btn-danger {
+      background: linear-gradient(135deg, #EF4444 0%, #F87171 100%);
+      transition: all 0.3s ease;
+    }
+    
+    .btn-danger:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px -5px rgba(239, 68, 68, 0.3);
+    }
+    
+    .btn-warning {
+      background: linear-gradient(135deg, #F59E0B 0%, #FBBF24 100%);
+      transition: all 0.3s ease;
+    }
+    
+    .btn-warning:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px -5px rgba(245, 158, 11, 0.3);
+    }
+    
+    .card-hover {
+      transition: all 0.3s ease;
+    }
+    
+    .card-hover:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    }
+    
+    .form-input:focus {
+      @apply ring-2 ring-primary/50 border-primary;
+    }
+    
+    .modal-backdrop {
+      backdrop-filter: blur(4px);
+      background-color: rgba(0, 0, 0, 0.5);
+    }
+  </style>
+</head>
+
+<body class="min-h-screen">
+  <!-- 导航栏 -->
+  <header class="bg-white shadow-md fixed w-full top-0 z-50">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between items-center py-4">
+        <!-- Logo -->
+        <a href="index.html" class="flex items-center space-x-2">
+          <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
+            <i class="fa fa-gamepad text-white text-xl"></i>
+          </div>
+          <span class="font-display font-bold text-2xl text-gradient bg-gradient-to-r from-primary to-secondary">LinyuGameStudio</span>
+        </a>
+        
+        <!-- 导航链接 -->
+        <nav class="flex items-center space-x-6">
+          <a href="index.html" class="font-medium text-gray-700 hover:text-primary transition-colors flex items-center">
+            <i class="fa fa-home mr-2"></i> 官网首页
+          </a>
+          <a href="#" class="font-medium text-primary border-b-2 border-primary pb-1 flex items-center">
+            <i class="fa fa-cog mr-2"></i> 管理后台
+          </a>
+          <button id="logout-btn" class="flex items-center text-gray-600 hover:text-danger transition-colors">
+            <i class="fa fa-sign-out mr-2"></i> 退出登录
+          </button>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <main class="container mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-16">
+    <!-- 页面标题 -->
+    <div class="mb-8 text-center">
+      <h1 class="font-display font-bold text-[clamp(1.8rem,3vw,2.5rem)] mb-2">游戏管理系统</h1>
+      <p class="text-gray-600">管理您的游戏作品 - 新增、编辑、删除游戏信息</p>
+    </div>
+    
+    <!-- 操作区 -->
+    <div class="bg-white rounded-xl shadow-md p-6 mb-8">
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div class="flex items-center">
+          <button id="add-game-btn" class="btn-success text-white font-medium py-2 px-6 rounded-lg flex items-center">
+            <i class="fa fa-plus mr-2"></i> 新增游戏
+          </button>
+        </div>
+        <div class="flex items-center w-full sm:w-auto">
+          <div class="relative">
+            <input type="text" id="search-games" placeholder="搜索游戏名称..." class="pl-10 pr-4 py-2 border border-gray-300 rounded-lg w-full sm:w-64 focus:outline-none form-input">
+            <i class="fa fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+          </div>
+          <select id="filter-category" class="ml-4 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none form-input">
+            <option value="all">所有分类</option>
+            <option value="动作冒险">动作冒险</option>
+            <option value="角色扮演">角色扮演</option>
+            <option value="策略益智">策略益智</option>
+            <option value="模拟经营">模拟经营</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 游戏列表 -->
+    <div class="bg-white rounded-xl shadow-md overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">游戏封面</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">游戏信息</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">分类/平台</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">价格/评分</th>
+              <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
+            </tr>
+          </thead>
+          <tbody id="games-list" class="bg-white divide-y divide-gray-200">
+            <!-- 游戏数据将通过JS动态渲染 -->
+          </tbody>
+        </table>
+      </div>
+      
+      <!-- 空状态 -->
+      <div id="empty-state" class="py-20 text-center hidden">
+        <div class="w-24 h-24 mx-auto mb-4 text-gray-300">
+          <i class="fa fa-gamepad text-6xl"></i>
+        </div>
+        <h3 class="text-xl font-medium text-gray-700 mb-2">暂无游戏数据</h3>
+        <p class="text-gray-500 mb-6">点击"新增游戏"按钮添加您的第一款游戏</p>
+        <button id="add-game-empty-btn" class="btn-success text-white font-medium py-2 px-6 rounded-lg">
+          <i class="fa fa-plus mr-2"></i> 新增游戏
+        </button>
+      </div>
+      
+      <!-- 加载状态 -->
+      <div id="loading-state" class="py-20 text-center">
+        <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary mx-auto mb-4"></div>
+        <p class="text-gray-500">加载游戏数据中...</p>
+      </div>
+    </div>
+  </main>
+  
+  <!-- 新增/编辑游戏模态框 -->
+  <div id="game-modal" class="fixed inset-0 z-50 flex items-center justify-center hidden">
+    <div class="modal-backdrop absolute inset-0" id="modal-backdrop"></div>
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto relative z-10">
+      <div class="p-6 border-b border-gray-200">
+        <div class="flex justify-between items-center">
+          <h3 id="modal-title" class="font-display font-bold text-2xl">新增游戏</h3>
+          <button id="close-modal" class="text-gray-400 hover:text-gray-500">
+            <i class="fa fa-times text-xl"></i>
+          </button>
+        </div>
+      </div>
+      
+      <form id="game-form" class="p-6">
+        <input type="hidden" id="game-id">
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          <div>
+            <label for="game-name" class="block text-gray-700 font-medium mb-2">游戏名称 <span class="text-danger">*</span></label>
+            <input type="text" id="game-name" name="game-name" required class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none form-input" placeholder="输入游戏名称">
+          </div>
+          
+          <div>
+            <label for="game-category" class="block text-gray-700 font-medium mb-2">游戏分类 <span class="text-danger">*</span></label>
+            <select id="game-category" name="game-category" required class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none form-input">
+              <option value="">选择分类</option>
+              <option value="动作冒险">动作冒险</option>
+              <option value="角色扮演">角色扮演</option>
+              <option value="策略益智">策略益智</option>
+              <option value="模拟经营">模拟经营</option>
+            </select>
+          </div>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          <div>
+            <label for="game-platform" class="block text-gray-700 font-medium mb-2">支持平台 <span class="text-danger">*</span></label>
+            <input type="text" id="game-platform" name="game-platform" required class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none form-input" placeholder="例如：PC/主机/移动">
+          </div>
+          
+          <div>
+            <label for="game-price" class="block text-gray-700 font-medium mb-2">游戏价格 <span class="text-danger">*</span></label>
+            <div class="relative">
+              <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">¥</span>
+              <input type="number" id="game-price" name="game-price" required min="0" step="0.01" class="w-full pl-8 pr-4 py-3 rounded-lg border border-gray-300 focus:outline-none form-input" placeholder="输入游戏价格">
+            </div>
+          </div>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          <div>
+            <label for="game-rating" class="block text-gray-700 font-medium mb-2">游戏评分 <span class="text-danger">*</span></label>
+            <div class="relative">
+              <input type="number" id="game-rating" name="game-rating" required min="0" max="5" step="0.1" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none form-input" placeholder="0.0 - 5.0">
+              <span class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500">/5.0</span>
+            </div>
+          </div>
+          
+          <div>
+            <label for="game-tag" class="block text-gray-700 font-medium mb-2">游戏标签</label>
+            <input type="text" id="game-tag" name="game-tag" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none form-input" placeholder="多个标签用逗号分隔">
+          </div>
+        </div>
+        
+        <div class="mb-6">
+          <label for="game-description" class="block text-gray-700 font-medium mb-2">游戏描述 <span class="text-danger">*</span></label>
+          <textarea id="game-description" name="game-description" required rows="4" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none form-input" placeholder="输入游戏详细描述"></textarea>
+        </div>
+        
+        <div class="mb-6">
+          <label for="game-image" class="block text-gray-700 font-medium mb-2">游戏封面图片 <span class="text-danger">*</span></label>
+          <input type="url" id="game-image" name="game-image" required class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none form-input" placeholder="输入图片URL地址">
+          <p class="text-gray-500 text-sm mt-1">推荐尺寸：600x400px，支持JPG、PNG格式</p>
+          
+          <div class="mt-3 flex justify-center">
+            <img id="preview-image" src="https://via.placeholder.com/600x400?text=预览图" alt="游戏封面预览" class="w-full max-w-md h-48 object-cover rounded-lg border border-gray-200">
+          </div>
+        </div>
+        
+        <div class="mb-6">
+          <label for="game-download-url" class="block text-gray-700 font-medium mb-2">下载链接 <span class="text-danger">*</span></label>
+          <input type="url" id="game-download-url" name="game-download-url" required class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none form-input" placeholder="输入游戏下载地址">
+        </div>
+        
+        <div class="mb-6">
+          <label class="block text-gray-700 font-medium mb-2">游戏标签</label>
+          <div class="flex flex-wrap gap-2">
+            <label class="inline-flex items-center">
+              <input type="checkbox" name="game-features" value="热门" class="form-checkbox h-4 w-4 text-primary">
+              <span class="ml-2 text-gray-700">热门</span>
+            </label>
+            <label class="inline-flex items-center">
+              <input type="checkbox" name="game-features" value="新作" class="form-checkbox h-4 w-4 text-primary">
+              <span class="ml-2 text-gray-700">新作</span>
+            </label>
+            <label class="inline-flex items-center">
+              <input type="checkbox" name="game-features" value="畅销" class="form-checkbox h-4 w-4 text-primary">
+              <span class="ml-2 text-gray-700">畅销</span>
+            </label>
+            <label class="inline-flex items-center">
+              <input type="checkbox" name="game-features" value="折扣" class="form-checkbox h-4 w-4 text-primary">
+              <span class="ml-2 text-gray-700">折扣</span>
+            </label>
+          </div>
+        </div>
+        
+        <div class="flex justify-end gap-4">
+          <button type="button" id="cancel-modal" class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-colors">
+            取消
+          </button>
+          <button type="submit" class="btn-primary text-white font-medium py-2 px-6 rounded-lg">
+            <i id="submit-icon" class="fa fa-plus mr-2"></i>
+            <span id="submit-text">新增游戏</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+  
+  <!-- 删除确认模态框 -->
+  <div id="delete-modal" class="fixed inset-0 z-50 flex items-center justify-center hidden">
+    <div class="modal-backdrop absolute inset-0" id="delete-backdrop"></div>
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-md relative z-10">
+      <div class="p-6 border-b border-gray-200">
+        <h3 class="font-display font-bold text-2xl text-danger">确认删除</h3>
+      </div>
+      
+      <div class="p-6">
+        <p class="text-gray-700 mb-6">您确定要删除游戏 <span id="delete-game-name" class="font-bold"></span> 吗？此操作不可撤销。</p>
+        
+        <div class="flex justify-end gap-4">
+          <button type="button" id="cancel-delete" class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-colors">
+            取消
+          </button>
+          <button type="button" id="confirm-delete" class="btn-danger text-white font-medium py-2 px-6 rounded-lg">
+            <i class="fa fa-trash mr-2"></i> 确认删除
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- 成功提示 Toast -->
+  <div id="toast-success" class="fixed bottom-6 right-6 bg-success text-white px-6 py-3 rounded-lg shadow-lg flex items-center transform translate-y-20 opacity-0 transition-all duration-300 z-50">
+    <i class="fa fa-check-circle mr-2 text-xl"></i>
+    <span id="toast-success-message">操作成功！</span>
+  </div>
+  
+  <!-- 错误提示 Toast -->
+  <div id="toast-error" class="fixed bottom-6 right-6 bg-danger text-white px-6 py-3 rounded-lg shadow-lg flex items-center transform translate-y-20 opacity-0 transition-all duration-300 z-50">
+    <i class="fa fa-exclamation-circle mr-2 text-xl"></i>
+    <span id="toast-error-message">操作失败！</span>
+  </div>
+
+  <script>
+    // 游戏数据（使用localStorage存储）
+    let games = JSON.parse(localStorage.getItem('linyuGames')) || [
+      {
+        id: 1,
+        name: "星际探险：未知边界",
+        category: "动作冒险",
+        platform: "PC/主机",
+        price: 198,
+        rating: 4.8,
+        tags: "开放世界,多人联机",
+        description: "一款开放世界太空探险游戏，探索未知星球，解开宇宙奥秘。",
+        image: "https://picsum.photos/id/237/600/400",
+        downloadUrl: "https://example-download-site.com/star-explorer",
+        features: ["热门"]
+      },
+      {
+        id: 2,
+        name: "魔法大陆：暗影觉醒",
+        category: "角色扮演",
+        platform: "全平台",
+        price: 248,
+        rating: 4.6,
+        tags: "角色扮演,剧情驱动",
+        description: "奇幻世界中的冒险之旅，掌握强大魔法，对抗黑暗势力。",
+        image: "https://picsum.photos/id/120/600/400",
+        downloadUrl: "https://example-download-site.com/magic-land",
+        features: ["新作"]
+      },
+      {
+        id: 3,
+        name: "文明帝国：新纪元",
+        category: "策略益智",
+        platform: "PC/移动",
+        price: 168,
+        rating: 4.5,
+        tags: "策略,回合制",
+        description: "建立自己的文明，发展科技，与其他文明竞争或合作。",
+        image: "https://picsum.photos/id/110/600/400",
+        downloadUrl: "https://example-download-site.com/civilization-new-era",
+        features: []
+      },
+      {
+        id: 4,
+        name: "梦幻农场物语",
+        category: "模拟经营",
+        platform: "移动/PC",
+        price: 68,
+        rating: 4.7,
+        tags: "模拟,休闲",
+        description: "打造属于自己的梦幻农场，种植作物，养殖动物，与村民互动。",
+        image: "https://picsum.photos/id/133/600/400",
+        downloadUrl: "https://example-download-site.com/dream-farm",
+        features: []
+      },
+      {
+        id: 5,
+        name: "极速狂飙：终极赛事",
+        category: "动作冒险",
+        platform: "全平台",
+        price: 198,
+        rating: 4.9,
+        tags: "竞速,多人",
+        description: "极致速度体验，自定义赛车，挑战全球赛道和对手。",
+        image: "https://picsum.photos/id/155/600/400",
+        downloadUrl: "https://example-download-site.com/speed-racing",
+        features: ["畅销"]
+      }
+    ];
+    
+    // 保存游戏数据到localStorage
+    function saveGames() {
+      localStorage.setItem('linyuGames', JSON.stringify(games));
+    }
+    
+    // 渲染游戏列表
+    function renderGames(filteredGames = null) {
+      const gamesList = document.getElementById('games-list');
+      const emptyState = document.getElementById('empty-state');
+      const loadingState = document.getElementById('loading-state');
+      
+      // 隐藏加载状态
+      loadingState.classList.add('hidden');
+      
+      // 使用过滤后的游戏数据或全部游戏数据
+      const displayGames = filteredGames || games;
+      
+      if (displayGames.length === 0) {
+        // 显示空状态
+        gamesList.innerHTML = '';
+        emptyState.classList.remove('hidden');
+        return;
+      }
+      
+      // 隐藏空状态
+      emptyState.classList.add('hidden');
+      
+      // 渲染游戏列表
+      gamesList.innerHTML = displayGames.map(game => `
+        <tr class="card-hover">
+          <td class="px-6 py-4 whitespace-nowrap">
+            <div class="w-16 h-16 rounded-lg overflow-hidden">
+              <img src="${game.image}" alt="${game.name}" class="w-full h-full object-cover">
+            </div>
+          </td>
+          <td class="px-6 py-4">
+            <div class="font-bold text-gray-900">${game.name}</div>
+            <div class="mt-1 text-sm text-gray-500 line-clamp-2">${game.description}</div>
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap">
+            <div class="text-sm text-gray-900">${game.category}</div>
+            <div class="mt-1 text-sm text-gray-500">${game.platform}</div>
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap">
+            <div class="text-sm font-medium text-primary">¥${game.price}</div>
+            <div class="mt-1 text-sm text-gray-500 flex items-center">
+              <i class="fa fa-star text-yellow-400 mr-1"></i> ${game.rating}
+            </div>
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+            <button data-id="${game.id}" class="edit-game text-warning hover:text-warning/80 mr-4 transition-colors">
+              <i class="fa fa-pencil mr-1"></i> 编辑
+            </button>
+            <button data-id="${game.id}" class="delete-game text-danger hover:text-danger/80 transition-colors">
+              <i class="fa fa-trash mr-1"></i> 删除
+            </button>
+          </td>
+        </tr>
+      `).join('');
+      
+      // 绑定编辑和删除事件
+      bindGameActions();
+    }
+    
+    // 绑定游戏操作事件
+    function bindGameActions() {
+      // 编辑游戏
+      document.querySelectorAll('.edit-game').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const gameId = parseInt(e.currentTarget.dataset.id);
+          openEditModal(gameId);
+        });
+      });
+      
+      // 删除游戏
+      document.querySelectorAll('.delete-game').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const gameId = parseInt(e.currentTarget.dataset.id);
+          openDeleteModal(gameId);
+        });
+      });
+    }
+    
+    // 打开新增游戏模态框
+    function openAddModal() {
+      const modal = document.getElementById('game-modal');
+      const modalTitle = document.getElementById('modal-title');
+      const gameForm = document.getElementById('game-form');
+      const submitText = document.getElementById('submit-text');
+      const submitIcon = document.getElementById('submit-icon');
+      
+      // 重置表单
+      gameForm.reset();
+      document.getElementById('game-id').value = '';
+      document.getElementById('preview-image').src = 'https://via.placeholder.com/600x400?text=预览图';
+      
+      // 更新模态框标题和按钮文本
+      modalTitle.textContent = '新增游戏';
+      submitText.textContent = '新增游戏';
+      submitIcon.className = 'fa fa-plus mr-2';
+      
+      // 显示模态框
+      modal.classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+    }
+    
+    // 打开编辑游戏模态框
+    function openEditModal(gameId) {
+      const game = games.find(g => g.id === gameId);
+      if (!game) return;
+      
+      const modal = document.getElementById('game-modal');
+      const modalTitle = document.getElementById('modal-title');
+      const submitText = document.getElementById('submit-text');
+      const submitIcon = document.getElementById('submit-icon');
+      
+      // 填充表单数据
+      document.getElementById('game-id').value = game.id;
+      document.getElementById('game-name').value = game.name;
+      document.getElementById('game-category').value = game.category;
+      document.getElementById('game-platform').value = game.platform;
+      document.getElementById('game-price').value = game.price;
+      document.getElementById('game-rating').value = game.rating;
+      document.getElementById('game-tag').value = game.tags;
+      document.getElementById('game-description').value = game.description;
+      document.getElementById('game-image').value = game.image;
+      document.getElementById('game-download-url').value = game.downloadUrl;
+      document.getElementById('preview-image').src = game.image;
+      
+      // 勾选特性标签
+      document.querySelectorAll('input[name="game-features"]').forEach(checkbox => {
+        checkbox.checked = game.features.includes(checkbox.value);
+      });
+      
+      // 更新模态框标题和按钮文本
+      modalTitle.textContent = '编辑游戏';
+      submitText.textContent = '更新游戏';
+      submitIcon.className = 'fa fa-save mr-2';
+      
+      // 显示模态框
+      modal.classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+    }
+    
+    // 打开删除确认模态框
+    function openDeleteModal(gameId) {
+      const game = games.find(g => g.id === gameId);
+      if (!game) return;
+      
+      const deleteModal = document.getElementById('delete-modal');
+      const deleteGameName = document.getElementById('delete-game-name');
+      
+      // 设置要删除的游戏名称
+      deleteGameName.textContent = game.name;
+      
+      // 绑定确认删除事件
+      document.getElementById('confirm-delete').onclick = () => {
+        deleteGame(gameId);
+        deleteModal.classList.add('hidden');
+        document.body.style.overflow = '';
+      };
+      
+      // 显示删除模态框
+      deleteModal.classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+    }
+    
+    // 删除游戏
+    function deleteGame(gameId) {
+      games = games.filter(game => game.id !== gameId);
+      saveGames();
+      renderGames();
+      showToast('success', '游戏删除成功！');
+    }
+    
+    // 显示提示框
+    function showToast(type, message) {
+      const toast = document.getElementById(`toast-${type}`);
+      const toastMessage = document.getElementById(`toast-${type}-message`);
+      
+      // 设置消息内容
+      toastMessage.textContent = message;
+      
+      // 显示提示框
+      toast.classList.remove('translate-y-20', 'opacity-0');
+      
+      // 3秒后隐藏
+      setTimeout(() => {
+        toast.classList.add('translate-y-20', 'opacity-0');
+      }, 3000);
+    }
+    
+    // 初始化页面
+    function init() {
+      // 渲染游戏列表
+      renderGames();
+      
+      // 新增游戏按钮
+      document.getElementById('add-game-btn').addEventListener('click', openAddModal);
+      document.getElementById('add-game-empty-btn').addEventListener('click', openAddModal);
+      
+      // 关闭模态框
+      document.getElementById('close-modal').addEventListener('click', closeModal);
+      document.getElementById('cancel-modal').addEventListener('click', closeModal);
+      document.getElementById('modal-backdrop').addEventListener('click', closeModal);
+      
+      // 关闭删除模态框
+      document.getElementById('cancel-delete').addEventListener('click', () => {
+        document.getElementById('delete-modal').classList.add('hidden');
+        document.body.style.overflow = '';
+      });
+      document.getElementById('delete-backdrop').addEventListener('click', () => {
+        document.getElementById('delete-modal').classList.add('hidden');
+        document.body.style.overflow = '';
+      });
+      
+      // 图片预览
+      document.getElementById('game-image').addEventListener('input', (e) => {
+        const imageUrl = e.target.value;
+        if (imageUrl) {
+          document.getElementById('preview-image').src = imageUrl;
+        } else {
+          document.getElementById('preview-image').src = 'https://via.placeholder.com/600x400?text=预览图';
+        }
+      });
+      
+      // 提交游戏表单
+      document.getElementById('game-form').addEventListener('submit', (e) => {
+        e.preventDefault();
+        
+        // 获取表单数据
+        const gameId = document.getElementById('game-id').value;
+        const gameName = document.getElementById('game-name').value;
+        const gameCategory = document.getElementById('game-category').value;
+        const gamePlatform = document.getElementById('game-platform').value;
+        const gamePrice = parseFloat(document.getElementById('game-price').value);
+        const gameRating = parseFloat(document.getElementById('game-rating').value);
+        const gameTags = document.getElementById('game-tag').value;
+        const gameDescription = document.getElementById('game-description').value;
+        const gameImage = document.getElementById('game-image').value;
+        const gameDownloadUrl = document.getElementById('game-download-url').value;
+        
+        // 获取选中的特性
+        const gameFeatures = [];
+        document.querySelectorAll('input[name="game-features"]:checked').forEach(checkbox => {
+          gameFeatures.push(checkbox.value);
+        });
+        
+        // 验证表单
+        if (!gameName || !gameCategory || !gamePlatform || !gamePrice || !gameRating || !gameDescription || !gameImage || !gameDownloadUrl) {
+          showToast('error', '请填写所有必填字段！');
+          return;
+        }
+        
+        if (gameRating < 0 || gameRating > 5) {
+          showToast('error', '评分必须在0.0-5.0之间！');
+          return;
+        }
+        
+        if (gamePrice < 0) {
+          showToast('error', '价格不能为负数！');
+          return;
+        }
+        
+        // 构建游戏对象
+        const gameData = {
+          name: gameName,
+          category: gameCategory,
+          platform: gamePlatform,
+          price: gamePrice,
+          rating: gameRating,
+          tags: gameTags,
+          description: gameDescription,
+          image: gameImage,
+          downloadUrl: gameDownloadUrl,
+          features: gameFeatures
+        };
+        
+        if (gameId) {
+          // 编辑现有游戏
+          const gameIndex = games.findIndex(g => g.id === parseInt(gameId));
+          if (gameIndex !== -1) {
+            games[gameIndex] = { ...games[gameIndex], ...gameData };
+            saveGames();
+            renderGames();
+            closeModal();
+            showToast('success', '游戏更新成功！');
+          }
+        } else {
+          // 新增游戏
+          const newGame = {
+            id: games.length > 0 ? Math.max(...games.map(g => g.id)) + 1 : 1,
+            ...gameData
+          };
+          
+          games.push(newGame);
+          saveGames();
+          renderGames();
+          closeModal();
+          showToast('success', '游戏新增成功！');
+        }
+      });
+      
+      // 搜索游戏
+      document.getElementById('search-games').addEventListener('input', (e) => {
+        const searchTerm = e.target.value.toLowerCase();
+        const filteredGames = games.filter(game => 
+          game.name.toLowerCase().includes(searchTerm) || 
+          game.description.toLowerCase().includes(searchTerm) ||
+          game.tags.toLowerCase().includes(searchTerm)
+        );
+        renderGames(filteredGames);
+      });
+      
+      // 筛选分类
+      document.getElementById('filter-category').addEventListener('change', (e) => {
+        const category = e.target.value;
+        if (category === 'all') {
+          renderGames();
+        } else {
+          const filteredGames = games.filter(game => game.category === category);
+          renderGames(filteredGames);
+        }
+      });
+      
+      // 退出登录
+      document.getElementById('logout-btn').addEventListener('click', () => {
+        if (confirm('确定要退出登录吗？')) {
+          // 这里可以添加退出登录逻辑，如清除登录状态等
+          window.location.href = 'index.html';
+        }
+      });
+    }
+    
+    // 关闭模态框
+    function closeModal() {
+      document.getElementById('game-modal').classList.add('hidden');
+      document.body.style.overflow = '';
+    }
+    
+    // 页面加载完成后初始化
+    document.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>
