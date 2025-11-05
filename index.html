@@ -1,0 +1,950 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LinyuGameStudio - 创意游戏开发工作室</title>
+  <!-- 引入外部资源 -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+  
+  <!-- Tailwind 配置 -->
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            primary: '#165DFF',
+            secondary: '#7B61FF',
+            dark: '#0F172A',
+            light: '#F8FAFC',
+            accent: '#FF6B8B',
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+            display: ['Montserrat', 'sans-serif'],
+          },
+          animation: {
+            'float': 'float 3s ease-in-out infinite',
+            'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+          },
+          keyframes: {
+            float: {
+              '0%, 100%': { transform: 'translateY(0)' },
+              '50%': { transform: 'translateY(-10px)' },
+            }
+          },
+        },
+      }
+    }
+  </script>
+  
+  <!-- 自定义工具类 -->
+  <style type="text/tailwindcss">
+    @layer utilities {
+      .content-auto {
+        content-visibility: auto;
+      }
+      .text-shadow {
+        text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      }
+      .text-gradient {
+        background-clip: text;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+      .bg-blur {
+        backdrop-filter: blur(8px);
+      }
+      .scrollbar-hide::-webkit-scrollbar {
+        display: none;
+      }
+      .scrollbar-hide {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+      }
+    }
+  </style>
+  
+  <!-- 额外样式 -->
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Montserrat:wght@500;600;700;800&display=swap');
+    
+    html {
+      scroll-behavior: smooth;
+    }
+    
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+    
+    .parallax {
+      background-attachment: fixed;
+      background-position: center;
+      background-repeat: no-repeat;
+      background-size: cover;
+    }
+    
+    .game-card:hover .game-overlay {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    
+    .game-overlay {
+      opacity: 0;
+      transform: translateY(20px);
+      transition: all 0.3s ease;
+    }
+    
+    .nav-link {
+      position: relative;
+    }
+    
+    .nav-link::after {
+      content: '';
+      position: absolute;
+      width: 0;
+      height: 2px;
+      bottom: -2px;
+      left: 0;
+      background-color: #165DFF;
+      transition: width 0.3s ease;
+    }
+    
+    .nav-link:hover::after {
+      width: 100%;
+    }
+    
+    .btn-primary {
+      background: linear-gradient(135deg, #165DFF 0%, #7B61FF 100%);
+      transition: all 0.3s ease;
+    }
+    
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px -5px rgba(22, 93, 255, 0.3);
+    }
+    
+    .btn-download {
+      background: linear-gradient(135deg, #FF6B8B 0%, #FF8E53 100%);
+      transition: all 0.3s ease;
+    }
+    
+    .btn-download:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px -5px rgba(255, 107, 139, 0.3);
+    }
+    
+    .card-hover {
+      transition: all 0.3s ease;
+    }
+    
+    .card-hover:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    }
+    
+    .animate-on-scroll {
+      opacity: 0;
+      transform: translateY(30px);
+      transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+    }
+    
+    .animate-on-scroll.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    
+    /* 团队成员卡片样式优化 - 确保不跳转 */
+    .team-card {
+      cursor: default;
+    }
+    
+    .team-social {
+      opacity: 0;
+      transform: translateY(10px);
+      transition: all 0.3s ease;
+    }
+    
+    .team-card:hover .team-social {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  </style>
+</head>
+
+<body class="bg-light text-dark dark:bg-dark dark:text-light transition-colors duration-300">
+  <!-- 导航栏 -->
+  <header id="navbar" class="fixed w-full top-0 z-50 transition-all duration-300 bg-light/90 dark:bg-dark/90 bg-blur">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between items-center py-4">
+        <!-- Logo -->
+        <a href="#" class="flex items-center space-x-2">
+          <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
+            <i class="fa fa-gamepad text-white text-xl"></i>
+          </div>
+          <span class="font-display font-bold text-2xl text-gradient bg-gradient-to-r from-primary to-secondary">LinyuGameStudio</span>
+        </a>
+        
+        <!-- 桌面导航 -->
+        <nav class="hidden md:flex items-center space-x-8">
+          <a href="#home" class="nav-link font-medium hover:text-primary dark:hover:text-primary transition-colors">首页</a>
+          <a href="#about" class="nav-link font-medium hover:text-primary dark:hover:text-primary transition-colors">关于我们</a>
+          <a href="#games" class="nav-link font-medium hover:text-primary dark:hover:text-primary transition-colors">游戏作品</a>
+          <a href="#team" class="nav-link font-medium hover:text-primary dark:hover:text-primary transition-colors">团队成员</a>
+          <a href="#contact" class="nav-link font-medium hover:text-primary dark:hover:text-primary transition-colors">联系我们</a>
+        </nav>
+        
+        <!-- 主题切换按钮 -->
+        <button id="theme-toggle" class="mr-4 p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors">
+          <i class="fa fa-moon-o dark:hidden text-xl"></i>
+          <i class="fa fa-sun-o hidden dark:inline text-xl"></i>
+        </button>
+        
+        <!-- 移动端菜单按钮 -->
+        <button id="menu-toggle" class="md:hidden p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors">
+          <i class="fa fa-bars text-xl"></i>
+        </button>
+      </div>
+    </div>
+    
+    <!-- 移动端导航菜单 -->
+    <div id="mobile-menu" class="md:hidden hidden bg-white dark:bg-gray-900 shadow-lg absolute w-full">
+      <div class="container mx-auto px-4 py-3 flex flex-col space-y-3">
+        <a href="#home" class="py-2 font-medium hover:text-primary dark:hover:text-primary transition-colors">首页</a>
+        <a href="#about" class="py-2 font-medium hover:text-primary dark:hover:text-primary transition-colors">关于我们</a>
+        <a href="#games" class="py-2 font-medium hover:text-primary dark:hover:text-primary transition-colors">游戏作品</a>
+        <a href="#team" class="py-2 font-medium hover:text-primary dark:hover:text-primary transition-colors">团队成员</a>
+        <a href="#contact" class="py-2 font-medium hover:text-primary dark:hover:text-primary transition-colors">联系我们</a>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- 英雄区域 -->
+    <section id="home" class="min-h-screen flex items-center relative overflow-hidden pt-20">
+      <!-- 背景装饰 -->
+      <div class="absolute inset-0 z-0">
+        <div class="absolute top-20 left-10 w-64 h-64 bg-primary/10 dark:bg-primary/20 rounded-full filter blur-3xl"></div>
+        <div class="absolute bottom-20 right-10 w-80 h-80 bg-secondary/10 dark:bg-secondary/20 rounded-full filter blur-3xl"></div>
+      </div>
+      
+      <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-20 relative z-10">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+          <div class="animate-on-scroll">
+            <h1 class="font-display font-bold text-[clamp(2.5rem,5vw,4rem)] leading-tight mb-6">
+              创造<span class="text-gradient bg-gradient-to-r from-primary to-secondary">沉浸式</span>游戏体验
+            </h1>
+            <p class="text-lg md:text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-xl">
+              LinyuGameStudio 致力于开发富有创意、画面精美的游戏作品，为玩家带来难忘的互动娱乐体验。
+            </p>
+            <div class="flex flex-col sm:flex-row gap-4">
+              <a href="#games" class="btn-primary text-white font-medium py-3 px-8 rounded-lg text-center">
+                探索作品
+              </a>
+              <a href="#contact" class="bg-white dark:bg-gray-800 text-dark dark:text-light border border-gray-200 dark:border-gray-700 font-medium py-3 px-8 rounded-lg text-center hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                联系我们
+              </a>
+            </div>
+            
+            <!-- 统计数据 -->
+            <div class="grid grid-cols-3 gap-6 mt-12">
+              <div class="text-center">
+                <p class="font-display font-bold text-3xl text-primary dark:text-primary">5+</p>
+                <p class="text-gray-600 dark:text-gray-400 text-sm">已发布游戏</p>
+              </div>
+              <div class="text-center">
+                <p class="font-display font-bold text-3xl text-primary dark:text-primary">15+</p>
+                <p class="text-gray-600 dark:text-gray-400 text-sm">团队成员</p>
+              </div>
+              <div class="text-center">
+                <p class="font-display font-bold text-3xl text-primary dark:text-primary">1M+</p>
+                <p class="text-gray-600 dark:text-gray-400 text-sm">全球玩家</p>
+              </div>
+            </div>
+          </div>
+          
+          <div class="relative animate-on-scroll" style="animation-delay: 0.3s">
+            <div class="relative z-10 rounded-2xl overflow-hidden shadow-2xl transform rotate-2 hover:rotate-0 transition-transform duration-500">
+              <img src="https://picsum.photos/id/160/800/600" alt="游戏展示图" class="w-full h-auto">
+              <div class="absolute inset-0 bg-gradient-to-t from-dark/70 to-transparent flex items-end">
+                <div class="p-6">
+                  <span class="bg-primary/90 text-white text-xs font-semibold py-1 px-3 rounded-full">热门游戏</span>
+                  <h3 class="text-white text-xl font-bold mt-2">星际探险：未知边界</h3>
+                  <a href="https://example-download-site.com/star-explorer" target="_blank" rel="noopener noreferrer" class="inline-block mt-3 btn-download text-white text-sm font-medium py-2 px-4 rounded-lg">
+                    <i class="fa fa-download mr-2"></i> 立即下载
+                  </a>
+                </div>
+              </div>
+            </div>
+            
+            <!-- 装饰元素 -->
+            <div class="absolute -top-6 -right-6 w-40 h-40 bg-secondary/20 dark:bg-secondary/30 rounded-xl rotate-12 blur-xl"></div>
+            <div class="absolute -bottom-8 -left-8 w-32 h-32 bg-primary/20 dark:bg-primary/30 rounded-xl -rotate-12 blur-xl"></div>
+            
+            <!-- 悬浮元素 -->
+            <div class="absolute top-1/4 -right-10 w-20 h-20 bg-accent/20 dark:bg-accent/30 rounded-full animate-float"></div>
+            <div class="absolute bottom-1/3 -left-8 w-16 h-16 bg-primary/20 dark:bg-primary/30 rounded-full animate-float" style="animation-delay: 0.5s"></div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 向下滚动指示 -->
+      <div class="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
+        <a href="#about" class="text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-primary transition-colors">
+          <i class="fa fa-chevron-down text-2xl"></i>
+        </a>
+      </div>
+    </section>
+    
+    <!-- 关于我们 -->
+    <section id="about" class="py-20 bg-gray-50 dark:bg-gray-900/50">
+      <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-16 animate-on-scroll">
+          <span class="inline-block bg-primary/10 dark:bg-primary/20 text-primary font-semibold py-1 px-3 rounded-full text-sm mb-4">关于工作室</span>
+          <h2 class="font-display font-bold text-[clamp(1.8rem,3vw,2.5rem)] mb-4">我们的故事</h2>
+          <p class="text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">专注于创造独特、沉浸式的游戏体验，让玩家在虚拟世界中探索无限可能</p>
+        </div>
+        
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+          <div class="animate-on-scroll">
+            <img src="https://picsum.photos/id/180/800/600" alt="工作室照片" class="w-full h-auto rounded-2xl shadow-xl">
+          </div>
+          
+          <div class="animate-on-scroll" style="animation-delay: 0.3s">
+            <h3 class="font-display font-bold text-2xl mb-4">我们是谁</h3>
+            <p class="text-gray-600 dark:text-gray-300 mb-6">
+              LinyuGameStudio 成立于2018年，是一支由热爱游戏的设计师、开发者和创意人才组成的团队。我们致力于将创新的游戏理念转化为引人入胜的互动体验，跨越各种平台和游戏类型。
+            </p>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+              <div class="flex items-start space-x-3 card-hover p-4 rounded-xl bg-white dark:bg-gray-800 shadow-md">
+                <div class="w-10 h-10 rounded-lg bg-primary/10 dark:bg-primary/20 flex items-center justify-center flex-shrink-0">
+                  <i class="fa fa-lightbulb-o text-primary text-xl"></i>
+                </div>
+                <div>
+                  <h4 class="font-bold mb-1">创新设计</h4>
+                  <p class="text-gray-600 dark:text-gray-400 text-sm">突破传统游戏框架，打造独特玩法</p>
+                </div>
+              </div>
+              
+              <div class="flex items-start space-x-3 card-hover p-4 rounded-xl bg-white dark:bg-gray-800 shadow-md">
+                <div class="w-10 h-10 rounded-lg bg-primary/10 dark:bg-primary/20 flex items-center justify-center flex-shrink-0">
+                  <i class="fa fa-code text-primary text-xl"></i>
+                </div>
+                <div>
+                  <h4 class="font-bold mb-1">顶尖技术</h4>
+                  <p class="text-gray-600 dark:text-gray-400 text-sm">采用前沿技术，保障流畅游戏体验</p>
+                </div>
+              </div>
+              
+              <div class="flex items-start space-x-3 card-hover p-4 rounded-xl bg-white dark:bg-gray-800 shadow-md">
+                <div class="w-10 h-10 rounded-lg bg-primary/10 dark:bg-primary/20 flex items-center justify-center flex-shrink-0">
+                  <i class="fa fa-users text-primary text-xl"></i>
+                </div>
+                <div>
+                  <h4 class="font-bold mb-1">玩家至上</h4>
+                  <p class="text-gray-600 dark:text-gray-400 text-sm">倾听玩家反馈，持续优化游戏体验</p>
+                </div>
+              </div>
+              
+              <div class="flex items-start space-x-3 card-hover p-4 rounded-xl bg-white dark:bg-gray-800 shadow-md">
+                <div class="w-10 h-10 rounded-lg bg-primary/10 dark:bg-primary/20 flex items-center justify-center flex-shrink-0">
+                  <i class="fa fa-paint-brush text-primary text-xl"></i>
+                </div>
+                <div>
+                  <h4 class="font-bold mb-1">精美画质</h4>
+                  <p class="text-gray-600 dark:text-gray-400 text-sm">打造视觉盛宴，沉浸游戏世界</p>
+                </div>
+              </div>
+            </div>
+            
+            <a href="#contact" class="inline-flex items-center font-medium text-primary hover:text-secondary transition-colors">
+              了解更多 <i class="fa fa-arrow-right ml-2"></i>
+            </a>
+          </div>
+        </div>
+        
+        <!-- 工作室数据 -->
+        <div class="mt-20 bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 animate-on-scroll">
+          <h3 class="font-display font-bold text-2xl mb-8 text-center">工作室数据</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div>
+              <canvas id="projectChart" height="250"></canvas>
+            </div>
+            <div>
+              <canvas id="platformChart" height="250"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    
+    <!-- 游戏作品 -->
+    <section id="games" class="py-20">
+      <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-16 animate-on-scroll">
+          <span class="inline-block bg-primary/10 dark:bg-primary/20 text-primary font-semibold py-1 px-3 rounded-full text-sm mb-4">我们的作品</span>
+          <h2 class="font-display font-bold text-[clamp(1.8rem,3vw,2.5rem)] mb-4">精选游戏</h2>
+          <p class="text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">每一款游戏都凝聚了我们的心血，为您带来独特的游戏体验</p>
+        </div>
+        
+        <!-- 游戏筛选 -->
+        <div class="flex flex-wrap justify-center gap-4 mb-12 animate-on-scroll">
+          <button class="game-filter active bg-primary text-white font-medium py-2 px-6 rounded-full">全部</button>
+          <button class="game-filter bg-gray-200 dark:bg-gray-700 font-medium py-2 px-6 rounded-full hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">动作冒险</button>
+          <button class="game-filter bg-gray-200 dark:bg-gray-700 font-medium py-2 px-6 rounded-full hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">角色扮演</button>
+          <button class="game-filter bg-gray-200 dark:bg-gray-700 font-medium py-2 px-6 rounded-full hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">策略益智</button>
+          <button class="game-filter bg-gray-200 dark:bg-gray-700 font-medium py-2 px-6 rounded-full hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">模拟经营</button>
+        </div>
+        
+        <!-- 游戏列表 -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+          <!-- 游戏1 -->
+          <div class="game-card group rounded-2xl overflow-hidden shadow-lg bg-white dark:bg-gray-800 animate-on-scroll">
+            <div class="relative">
+              <img src="https://picsum.photos/id/237/600/400" alt="星际探险：未知边界" class="w-full h-60 object-cover transition-transform duration-500 group-hover:scale-110">
+              <div class="absolute top-4 left-4">
+                <span class="bg-accent text-white text-xs font-semibold py-1 px-3 rounded-full">热门</span>
+              </div>
+              <div class="game-overlay absolute inset-0 bg-gradient-to-t from-dark/90 via-dark/40 to-transparent flex flex-col justify-end p-6">
+                <div class="flex items-center space-x-2 mb-3">
+                  <span class="bg-primary/90 text-white text-xs font-semibold py-1 px-2 rounded">动作冒险</span>
+                  <span class="bg-white/20 text-white text-xs font-semibold py-1 px-2 rounded">PC/主机</span>
+                </div>
+                <p class="text-white text-sm mb-4">一款开放世界太空探险游戏，探索未知星球，解开宇宙奥秘。</p>
+                <div class="flex space-x-3">
+                  <a href="#" class="btn-primary text-white text-sm font-medium py-2 px-4 rounded-lg text-center flex-1">了解详情</a>
+                  <a href="https://example-download-site.com/star-explorer" target="_blank" rel="noopener noreferrer" class="btn-download text-white text-sm font-medium py-2 px-4 rounded-lg text-center flex-1">
+                    <i class="fa fa-download mr-1"></i> 下载
+                  </a>
+                </div>
+              </div>
+            </div>
+            <div class="p-6">
+              <div class="flex justify-between items-center mb-2">
+                <h3 class="font-bold text-xl">星际探险：未知边界</h3>
+                <div class="flex items-center">
+                  <i class="fa fa-star text-yellow-400"></i>
+                  <span class="ml-1 font-medium">4.8</span>
+                </div>
+              </div>
+              <p class="text-gray-600 dark:text-gray-400 text-sm mb-4">探索无垠宇宙，发现新的文明和资源</p>
+              <div class="flex justify-between items-center">
+                <span class="text-primary font-bold">¥198</span>
+                <div class="flex space-x-2">
+                  <span class="bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-xs py-1 px-2 rounded">开放世界</span>
+                  <span class="bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-xs py-1 px-2 rounded">多人联机</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 游戏2 -->
+          <div class="game-card group rounded-2xl overflow-hidden shadow-lg bg-white dark:bg-gray-800 animate-on-scroll" style="animation-delay: 0.1s">
+            <div class="relative">
+              <img src="https://picsum.photos/id/120/600/400" alt="魔法大陆：暗影觉醒" class="w-full h-60 object-cover transition-transform duration-500 group-hover:scale-110">
+              <div class="absolute top-4 left-4">
+                <span class="bg-green-500 text-white text-xs font-semibold py-1 px-3 rounded-full">新作</span>
+              </div>
+              <div class="game-overlay absolute inset-0 bg-gradient-to-t from-dark/90 via-dark/40 to-transparent flex flex-col justify-end p-6">
+                <div class="flex items-center space-x-2 mb-3">
+                  <span class="bg-primary/90 text-white text-xs font-semibold py-1 px-2 rounded">角色扮演</span>
+                  <span class="bg-white/20 text-white text-xs font-semibold py-1 px-2 rounded">全平台</span>
+                </div>
+                <p class="text-white text-sm mb-4">奇幻世界中的冒险之旅，掌握强大魔法，对抗黑暗势力。</p>
+                <div class="flex space-x-3">
+                  <a href="#" class="btn-primary text-white text-sm font-medium py-2 px-4 rounded-lg text-center flex-1">了解详情</a>
+                  <a href="https://example-download-site.com/magic-land" target="_blank" rel="noopener noreferrer" class="btn-download text-white text-sm font-medium py-2 px-4 rounded-lg text-center flex-1">
+                    <i class="fa fa-download mr-1"></i> 下载
+                  </a>
+                </div>
+              </div>
+            </div>
+            <div class="p-6">
+              <div class="flex justify-between items-center mb-2">
+                <h3 class="font-bold text-xl">魔法大陆：暗影觉醒</h3>
+                <div class="flex items-center">
+                  <i class="fa fa-star text-yellow-400"></i>
+                  <span class="ml-1 font-medium">4.6</span>
+                </div>
+              </div>
+              <p class="text-gray-600 dark:text-gray-400 text-sm mb-4">自定义角色，探索魔法世界，完成史诗任务</p>
+              <div class="flex justify-between items-center">
+                <span class="text-primary font-bold">¥248</span>
+                <div class="flex space-x-2">
+                  <span class="bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-xs py-1 px-2 rounded">角色扮演</span>
+                  <span class="bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-xs py-1 px-2 rounded">剧情驱动</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 游戏3 -->
+          <div class="game-card group rounded-2xl overflow-hidden shadow-lg bg-white dark:bg-gray-800 animate-on-scroll" style="animation-delay: 0.2s">
+            <div class="relative">
+              <img src="https://picsum.photos/id/110/600/400" alt="文明帝国：新纪元" class="w-full h-60 object-cover transition-transform duration-500 group-hover:scale-110">
+              <div class="game-overlay absolute inset-0 bg-gradient-to-t from-dark/90 via-dark/40 to-transparent flex flex-col justify-end p-6">
+                <div class="flex items-center space-x-2 mb-3">
+                  <span class="bg-primary/90 text-white text-xs font-semibold py-1 px-2 rounded">策略益智</span>
+                  <span class="bg-white/20 text-white text-xs font-semibold py-1 px-2 rounded">PC/移动</span>
+                </div>
+                <p class="text-white text-sm mb-4">建立自己的文明，发展科技，与其他文明竞争或合作。</p>
+                <div class="flex space-x-3">
+                  <a href="#" class="btn-primary text-white text-sm font-medium py-2 px-4 rounded-lg text-center flex-1">了解详情</a>
+                  <a href="https://example-download-site.com/civilization-new-era" target="_blank" rel="noopener noreferrer" class="btn-download text-white text-sm font-medium py-2 px-4 rounded-lg text-center flex-1">
+                    <i class="fa fa-download mr-1"></i> 下载
+                  </a>
+                </div>
+              </div>
+            </div>
+            <div class="p-6">
+              <div class="flex justify-between items-center mb-2">
+                <h3 class="font-bold text-xl">文明帝国：新纪元</h3>
+                <div class="flex items-center">
+                  <i class="fa fa-star text-yellow-400"></i>
+                  <span class="ml-1 font-medium">4.5</span>
+                </div>
+              </div>
+              <p class="text-gray-600 dark:text-gray-400 text-sm mb-4">从零开始，打造横跨千年的伟大文明</p>
+              <div class="flex justify-between items-center">
+                <span class="text-primary font-bold">¥168</span>
+                <div class="flex space-x-2">
+                  <span class="bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-xs py-1 px-2 rounded">策略</span>
+                  <span class="bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-xs py-1 px-2 rounded">回合制</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 游戏4 -->
+          <div class="game-card group rounded-2xl overflow-hidden shadow-lg bg-white dark:bg-gray-800 animate-on-scroll" style="animation-delay: 0.3s">
+            <div class="relative">
+              <img src="https://picsum.photos/id/133/600/400" alt="梦幻农场物语" class="w-full h-60 object-cover transition-transform duration-500 group-hover:scale-110">
+              <div class="game-overlay absolute inset-0 bg-gradient-to-t from-dark/90 via-dark/40 to-transparent flex flex-col justify-end p-6">
+                <div class="flex items-center space-x-2 mb-3">
+                  <span class="bg-primary/90 text-white text-xs font-semibold py-1 px-2 rounded">模拟经营</span>
+                  <span class="bg-white/20 text-white text-xs font-semibold py-1 px-2 rounded">移动/PC</span>
+                </div>
+                <p class="text-white text-sm mb-4">打造属于自己的梦幻农场，种植作物，养殖动物，与村民互动。</p>
+                <div class="flex space-x-3">
+                  <a href="#" class="btn-primary text-white text-sm font-medium py-2 px-4 rounded-lg text-center flex-1">了解详情</a>
+                  <a href="https://example-download-site.com/dream-farm" target="_blank" rel="noopener noreferrer" class="btn-download text-white text-sm font-medium py-2 px-4 rounded-lg text-center flex-1">
+                    <i class="fa fa-download mr-1"></i> 下载
+                  </a>
+                </div>
+              </div>
+            </div>
+            <div class="p-6">
+              <div class="flex justify-between items-center mb-2">
+                <h3 class="font-bold text-xl">梦幻农场物语</h3>
+                <div class="flex items-center">
+                  <i class="fa fa-star text-yellow-400"></i>
+                  <span class="ml-1 font-medium">4.7</span>
+                </div>
+              </div>
+              <p class="text-gray-600 dark:text-gray-400 text-sm mb-4">治愈系农场经营，体验田园生活的乐趣</p>
+              <div class="flex justify-between items-center">
+                <span class="text-primary font-bold">¥68</span>
+                <div class="flex space-x-2">
+                  <span class="bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-xs py-1 px-2 rounded">模拟</span>
+                  <span class="bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-xs py-1 px-2 rounded">休闲</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 游戏5 -->
+          <div class="game-card group rounded-2xl overflow-hidden shadow-lg bg-white dark:bg-gray-800 animate-on-scroll" style="animation-delay: 0.4s">
+            <div class="relative">
+              <img src="https://picsum.photos/id/155/600/400" alt="极速狂飙：终极赛事" class="w-full h-60 object-cover transition-transform duration-500 group-hover:scale-110">
+              <div class="absolute top-4 left-4">
+                <span class="bg-blue-500 text-white text-xs font-semibold py-1 px-3 rounded-full">畅销</span>
+              </div>
+              <div class="game-overlay absolute inset-0 bg-gradient-to-t from-dark/90 via-dark/40 to-transparent flex flex-col justify-end p-6">
+                <div class="flex items-center space-x-2 mb-3">
+                  <span class="bg-primary/90 text-white text-xs font-semibold py-1 px-2 rounded">动作冒险</span>
+                  <span class="bg-white/20 text-white text-xs font-semibold py-1 px-2 rounded">全平台</span>
+                </div>
+                <p class="text-white text-sm mb-4">极致速度体验，自定义赛车，挑战全球赛道和对手。</p>
+                <div class="flex space-x-3">
+                  <a href="#" class="btn-primary text-white text-sm font-medium py-2 px-4 rounded-lg text-center flex-1">了解详情</a>
+                  <a href="https://example-download-site.com/speed-racing" target="_blank" rel="noopener noreferrer" class="btn-download text-white text-sm font-medium py-2 px-4 rounded-lg text-center flex-1">
+                    <i class="fa fa-download mr-1"></i> 下载
+                  </a>
+                </div>
+              </div>
+            </div>
+            <div class="p-6">
+              <div class="flex justify-between items-center mb-2">
+                <h3 class="font-bold text-xl">极速狂飙：终极赛事</h3>
+                <div class="flex items-center">
+                  <i class="fa fa-star text-yellow-400"></i>
+                  <span class="ml-1 font-medium">4.9</span>
+                </div>
+              </div>
+              <p class="text-gray-600 dark:text-gray-400 text-sm mb-4">肾上腺素飙升的赛车体验，成为赛道传奇</p>
+              <div class="flex justify-between items-center">
+                <span class="text-primary font-bold">¥198</span>
+                <div class="flex space-x-2">
+                  <span class="bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-xs py-1 px-2 rounded">竞速</span>
+                  <span class="bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-xs py-1 px-2 rounded">多人</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 游戏6 -->
+          <div class="game-card group rounded-2xl overflow-hidden shadow-lg bg-white dark:bg-gray-800 animate-on-scroll" style="animation-delay: 0.5s">
+            <div class="relative">
+              <img src="https://picsum.photos/id/200/600/400" alt="古城探秘：失落文明" class="w-full h-60 object-cover transition-transform duration-500 group-hover:scale-110">
+              <div class="game-overlay absolute inset-0 bg-gradient-to-t from-dark/90 via-dark/40 to-transparent flex flex-col justify-end p-6">
+                <div class="flex items-center space-x-2 mb-3">
+                  <span class="bg-primary/90 text-white text-xs font-semibold py-1 px-2 rounded">动作冒险</span>
+                  <span class="bg-white/20 text-white text-xs font-semibold py-1 px-2 rounded">PC/主机</span>
+                </div>
+                <p class="text-white text-sm mb-4">探索神秘古城，解开千年谜题，躲避危险陷阱。</p>
+                <div class="flex space-x-3">
+                  <a href="#" class="btn-primary text-white text-sm font-medium py-2 px-4 rounded-lg text-center flex-1">了解详情</a>
+                  <a href="https://example-download-site.com/ancient-city" target="_blank" rel="noopener noreferrer" class="btn-download text-white text-sm font-medium py-2 px-4 rounded-lg text-center flex-1">
+                    <i class="fa fa-download mr-1"></i> 下载
+                  </a>
+                </div>
+              </div>
+            </div>
+            <div class="p-6">
+              <div class="flex justify-between items-center mb-2">
+                <h3 class="font-bold text-xl">古城探秘：失落文明</h3>
+                <div class="flex items-center">
+                  <i class="fa fa-star text-yellow-400"></i>
+                  <span class="ml-1 font-medium">4.4</span>
+                </div>
+              </div>
+              <p class="text-gray-600 dark:text-gray-400 text-sm mb-4">沉浸式解谜冒险，揭开失落文明的神秘面纱</p>
+              <div class="flex justify-between items-center">
+                <span class="text-primary font-bold">¥148</span>
+                <div class="flex space-x-2">
+                  <span class="bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-xs py-1 px-2 rounded">解谜</span>
+                  <span class="bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-xs py-1 px-2 rounded">冒险</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 查看更多按钮 -->
+        <div class="text-center mt-12 animate-on-scroll">
+          <a href="#" class="inline-block btn-primary text-white font-medium py-3 px-8 rounded-lg">
+            查看更多游戏 <i class="fa fa-gamepad ml-2"></i>
+          </a>
+        </div>
+      </div>
+    </section>
+    
+    <!-- 团队成员 -->
+    <section id="team" class="py-20 bg-gray-50 dark:bg-gray-900/50">
+      <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-16 animate-on-scroll">
+          <span class="inline-block bg-primary/10 dark:bg-primary/20 text-primary font-semibold py-1 px-3 rounded-full text-sm mb-4">创意团队</span>
+          <h2 class="font-display font-bold text-[clamp(1.8rem,3vw,2.5rem)] mb-4">我们的核心成员</h2>
+          <p class="text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">由行业资深人士和充满激情的年轻人才组成的专业团队</p>
+        </div>
+        
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+          <!-- 团队成员1 -->
+          <div class="team-card bg-white dark:bg-gray-800 rounded-2xl shadow-lg overflow-hidden card-hover animate-on-scroll">
+            <div class="relative">
+              <img src="https://picsum.photos/id/64/400/400" alt="张明 - 创始人/首席设计师" class="w-full h-80 object-cover">
+              <!-- 社交链接 - 悬停显示 -->
+              <div class="team-social absolute inset-0 bg-gradient-to-t from-dark/70 to-transparent flex items-end justify-center pb-6">
+                <div class="flex space-x-3">
+                  <a href="https://twitter.com/example" target="_blank" rel="noopener noreferrer" class="bg-white/20 hover:bg-primary text-white w-10 h-10 rounded-full flex items-center justify-center transition-colors">
+                    <i class="fa fa-twitter"></i>
+                  </a>
+                  <a href="https://linkedin.com/in/example" target="_blank" rel="noopener noreferrer" class="bg-white/20 hover:bg-primary text-white w-10 h-10 rounded-full flex items-center justify-center transition-colors">
+                    <i class="fa fa-linkedin"></i>
+                  </a>
+                  <a href="https://instagram.com/example" target="_blank" rel="noopener noreferrer" class="bg-white/20 hover:bg-primary text-white w-10 h-10 rounded-full flex items-center justify-center transition-colors">
+                    <i class="fa fa-instagram"></i>
+                  </a>
+                </div>
+              </div>
+            </div>
+            <div class="p-6 text-center">
+              <h3 class="font-bold text-xl mb-1">张明</h3>
+              <p class="text-primary font-medium mb-3">创始人/首席设计师</p>
+              <p class="text-gray-600 dark:text-gray-400 text-sm">拥有10年游戏设计经验，曾主导多款畅销游戏的开发。擅长将创新理念转化为游戏体验。</p>
+            </div>
+          </div>
+          
+          <!-- 团队成员2 -->
+          <div class="team-card bg-white dark:bg-gray-800 rounded-2xl shadow-lg overflow-hidden card-hover animate-on-scroll" style="animation-delay: 0.1s">
+            <div class="relative">
+              <img src="https://picsum.photos/id/65/400/400" alt="李华 - 技术总监" class="w-full h-80 object-cover">
+              <!-- 社交链接 - 悬停显示 -->
+              <div class="team-social absolute inset-0 bg-gradient-to-t from-dark/70 to-transparent flex items-end justify-center pb-6">
+                <div class="flex space-x-3">
+                  <a href="https://twitter.com/example" target="_blank" rel="noopener noreferrer" class="bg-white/20 hover:bg-primary text-white w-10 h-10 rounded-full flex items-center justify-center transition-colors">
+                    <i class="fa fa-twitter"></i>
+                  </a>
+                  <a href="https://linkedin.com/in/example" target="_blank" rel="noopener noreferrer" class="bg-white/20 hover:bg-primary text-white w-10 h-10 rounded-full flex items-center justify-center transition-colors">
+                    <i class="fa fa-linkedin"></i>
+                  </a>
+                  <a href="https://github.com/example" target="_blank" rel="noopener noreferrer" class="bg-white/20 hover:bg-primary text-white w-10 h-10 rounded-full flex items-center justify-center transition-colors">
+                    <i class="fa fa-github"></i>
+                  </a>
+                </div>
+              </div>
+            </div>
+            <div class="p-6 text-center">
+              <h3 class="font-bold text-xl mb-1">李华</h3>
+              <p class="text-primary font-medium mb-3">技术总监</p>
+              <p class="text-gray-600 dark:text-gray-400 text-sm">资深游戏工程师，擅长游戏引擎开发和性能优化。曾参与多个3A游戏项目的技术实现。</p>
+            </div>
+          </div>
+          
+          <!-- 团队成员3 -->
+          <div class="team-card bg-white dark:bg-gray-800 rounded-2xl shadow-lg overflow-hidden card-hover animate-on-scroll" style="animation-delay: 0.2s">
+            <div class="relative">
+              <img src="https://picsum.photos/id/66/400/400" alt="王芳 - 美术总监" class="w-full h-80 object-cover">
+              <!-- 社交链接 - 悬停显示 -->
+              <div class="team-social absolute inset-0 bg-gradient-to-t from-dark/70 to-transparent flex items-end justify-center pb-6">
+                <div class="flex space-x-3">
+                  <a href="https://twitter.com/example" target="_blank" rel="noopener noreferrer" class="bg-white/20 hover:bg-primary text-white w-10 h-10 rounded-full flex items-center justify-center transition-colors">
+                    <i class="fa fa-twitter"></i>
+                  </a>
+                  <a href="https://artstation.com/example" target="_blank" rel="noopener noreferrer" class="bg-white/20 hover:bg-primary text-white w-10 h-10 rounded-full flex items-center justify-center transition-colors">
+                    <i class="fa fa-paint-brush"></i>
+                  </a>
+                  <a href="https://instagram.com/example" target="_blank" rel="noopener noreferrer" class="bg-white/20 hover:bg-primary text-white w-10 h-10 rounded-full flex items-center justify-center transition-colors">
+                    <i class="fa fa-instagram"></i>
+                  </a>
+                </div>
+              </div>
+            </div>
+            <div class="p-6 text-center">
+              <h3 class="font-bold text-xl mb-1">王芳</h3>
+              <p class="text-primary font-medium mb-3">美术总监</p>
+              <p class="text-gray-600 dark:text-gray-400 text-sm">知名游戏美术设计师，擅长打造独特的游戏视觉风格和沉浸式游戏世界。</p>
+            </div>
+          </div>
+          
+          <!-- 团队成员4 -->
+          <div class="team-card bg-white dark:bg-gray-800 rounded-2xl shadow-lg overflow-hidden card-hover animate-on-scroll" style="animation-delay: 0.3s">
+            <div class="relative">
+              <img src="https://picsum.photos/id/67/400/400" alt="赵强 - 音效设计师" class="w-full h-80 object-cover">
+              <!-- 社交链接 - 悬停显示 -->
+              <div class="team-social absolute inset-0 bg-gradient-to-t from-dark/70 to-transparent flex items-end justify-center pb-6">
+                <div class="flex space-x-3">
+                  <a href="https://twitter.com/example" target="_blank" rel="noopener noreferrer" class="bg-white/20 hover:bg-primary text-white w-10 h-10 rounded-full flex items-center justify-center transition-colors">
+                    <i class="fa fa-twitter"></i>
+                  </a>
+                  <a href="https://soundcloud.com/example" target="_blank" rel="noopener noreferrer" class="bg-white/20 hover:bg-primary text-white w-10 h-10 rounded-full flex items-center justify-center transition-colors">
+                    <i class="fa fa-music"></i>
+                  </a>
+                  <a href="https://linkedin.com/in/example" target="_blank" rel="noopener noreferrer" class="bg-white/20 hover:bg-primary text-white w-10 h-10 rounded-full flex items-center justify-center transition-colors">
+                    <i class="fa fa-linkedin"></i>
+                  </a>
+                </div>
+              </div>
+            </div>
+            <div class="p-6 text-center">
+              <h3 class="font-bold text-xl mb-1">赵强</h3>
+              <p class="text-primary font-medium mb-3">音效设计师</p>
+              <p class="text-gray-600 dark:text-gray-400 text-sm">获奖音效设计师，擅长创造沉浸式音频体验，为游戏增添情感深度。</p>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 扩展团队成员按钮 -->
+        <div class="text-center mt-12 animate-on-scroll">
+          <button id="show-more-team" class="bg-white dark:bg-gray-800 text-dark dark:text-light border border-gray-200 dark:border-gray-700 font-medium py-3 px-8 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+            查看更多团队成员 <i class="fa fa-users ml-2"></i>
+          </button>
+        </div>
+        
+        <!-- 隐藏的团队成员（默认不显示） -->
+        <div id="more-team-members" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mt-8 hidden">
+          <!-- 团队成员5 -->
+          <div class="team-card bg-white dark:bg-gray-800 rounded-2xl shadow-lg overflow-hidden card-hover">
+            <div class="relative">
+              <img src="https://picsum.photos/id/68/400/400" alt="陈静 - 游戏策划" class="w-full h-80 object-cover">
+              <!-- 社交链接 - 悬停显示 -->
+              <div class="team-social absolute inset-0 bg-gradient-to-t from-dark/70 to-transparent flex items-end justify-center pb-6">
+                <div class="flex space-x-3">
+                  <a href="https://twitter.com/example" target="_blank" rel="noopener noreferrer" class="bg-white/20 hover:bg-primary text-white w-10 h-10 rounded-full flex items-center justify-center transition-colors">
+                    <i class="fa fa-twitter"></i>
+                  </a>
+                  <a href="https://linkedin.com/in/example" target="_blank" rel="noopener noreferrer" class="bg-white/20 hover:bg-primary text-white w-10 h-10 rounded-full flex items-center justify-center transition-colors">
+                    <i class="fa fa-linkedin"></i>
+                  </a>
+                </div>
+              </div>
+            </div>
+            <div class="p-6 text-center">
+              <h3 class="font-bold text-xl mb-1">陈静</h3>
+              <p class="text-primary font-medium mb-3">游戏策划</p>
+              <p class="text-gray-600 dark:text-gray-400 text-sm">擅长游戏系统设计和关卡设计，注重玩家体验和游戏平衡性。</p>
+            </div>
+          </div>
+          
+          <!-- 团队成员6 -->
+          <div class="team-card bg-white dark:bg-gray-800 rounded-2xl shadow-lg overflow-hidden card-hover">
+            <div class="relative">
+              <img src="https://picsum.photos/id/69/400/400" alt="刘伟 - 程序员" class="w-full h-80 object-cover">
+              <!-- 社交链接 - 悬停显示 -->
+              <div class="team-social absolute inset-0 bg-gradient-to-t from-dark/70 to-transparent flex items-end justify-center pb-6">
+                <div class="flex space-x-3">
+                  <a href="https://github.com/example" target="_blank" rel="noopener noreferrer" class="bg-white/20 hover:bg-primary text-white w-10 h-10 rounded-full flex items-center justify-center transition-colors">
+                    <i class="fa fa-github"></i>
+                  </a>
+                  <a href="https://linkedin.com/in/example" target="_blank" rel="noopener noreferrer" class="bg-white/20 hover:bg-primary text-white w-10 h-10 rounded-full flex items-center justify-center transition-colors">
+                    <i class="fa fa-linkedin"></i>
+                  </a>
+                </div>
+              </div>
+            </div>
+            <div class="p-6 text-center">
+              <h3 class="font-bold text-xl mb-1">刘伟</h3>
+              <p class="text-primary font-medium mb-3">程序员</p>
+              <p class="text-gray-600 dark:text-gray-400 text-sm">专注于游戏逻辑和玩法实现，熟悉多种游戏引擎和开发工具。</p>
+            </div>
+          </div>
+          
+          <!-- 团队成员7 -->
+          <div class="team-card bg-white dark:bg-gray-800 rounded-2xl shadow-lg overflow-hidden card-hover">
+            <div class="relative">
+              <img src="https://picsum.photos/id/70/400/400" alt="黄丽 - 2D美术" class="w-full h-80 object-cover">
+              <!-- 社交链接 - 悬停显示 -->
+              <div class="team-social absolute inset-0 bg-gradient-to-t from-dark/70 to-transparent flex items-end justify-center pb-6">
+                <div class="flex space-x-3">
+                  <a href="https://artstation.com/example" target="_blank" rel="noopener noreferrer" class="bg-white/20 hover:bg-primary text-white w-10 h-10 rounded-full flex items-center justify-center transition-colors">
+                    <i class="fa fa-paint-brush"></i>
+                  </a>
+                  <a href="https://instagram.com/example" target="_blank" rel="noopener noreferrer" class="bg-white/20 hover:bg-primary text-white w-10 h-10 rounded-full flex items-center justify-center transition-colors">
+                    <i class="fa fa-instagram"></i>
+                  </a>
+                </div>
+              </div>
+            </div>
+            <div class="p-6 text-center">
+              <h3 class="font-bold text-xl mb-1">黄丽</h3>
+              <p class="text-primary font-medium mb-3">2D美术</p>
+              <p class="text-gray-600 dark:text-gray-400 text-sm">擅长角色设计和UI设计，风格多样，注重细节和用户体验。</p>
+            </div>
+          </div>
+          
+          <!-- 团队成员8 -->
+          <div class="team-card bg-white dark:bg-gray-800 rounded-2xl shadow-lg overflow-hidden card-hover">
+            <div class="relative">
+              <img src="https://picsum.photos/id/71/400/400" alt="周明 - 市场经理" class="w-full h-80 object-cover">
+              <!-- 社交链接 - 悬停显示 -->
+              <div class="team-social absolute inset-0 bg-gradient-to-t from-dark/70 to-transparent flex items-end justify-center pb-6">
+                <div class="flex space-x-3">
+                  <a href="https://twitter.com/example" target="_blank" rel="noopener noreferrer" class="bg-white/20 hover:bg-primary text-white w-10 h-10 rounded-full flex items-center justify-center transition-colors">
+                    <i class="fa fa-twitter"></i>
+                  </a>
+                  <a href="https://linkedin.com/in/example" target="_blank" rel="noopener noreferrer" class="bg-white/20 hover:bg-primary text-white w-10 h-10 rounded-full flex items-center justify-center transition-colors">
+                    <i class="fa fa-linkedin"></i>
+                  </a>
+                </div>
+              </div>
+            </div>
+            <div class="p-6 text-center">
+              <h3 class="font-bold text-xl mb-1">周明</h3>
+              <p class="text-primary font-medium mb-3">市场经理</p>
+              <p class="text-gray-600 dark:text-gray-400 text-sm">负责游戏推广和市场策略，擅长构建玩家社区和品牌建设。</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    
+    <!-- 联系我们 -->
+    <section id="contact" class="py-20">
+      <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-16 animate-on-scroll">
+          <span class="inline-block bg-primary/10 dark:bg-primary/20 text-primary font-semibold py-1 px-3 rounded-full text-sm mb-4">联系我们</span>
+          <h2 class="font-display font-bold text-[clamp(1.8rem,3vw,2.5rem)] mb-4">与我们取得联系</h2>
+          <p class="text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">无论是合作洽谈、商务咨询还是加入我们，都欢迎随时联系</p>
+        </div>
+        
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+          <div class="animate-on-scroll">
+            <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 h-full">
+              <h3 class="font-display font-bold text-2xl mb-6">发送消息</h3>
+              <form>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
+                  <div>
+                    <label for="name" class="block text-gray-700 dark:text-gray-300 font-medium mb-2">姓名</label>
+                    <input type="text" id="name" class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-dark dark:text-light focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors" placeholder="您的姓名">
+                  </div>
+                  <div>
+                    <label for="email" class="block text-gray-700 dark:text-gray-300 font-medium mb-2">邮箱</label>
+                    <input type="email" id="email" class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-dark dark:text-light focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors" placeholder="您的邮箱">
+                  </div>
+                </div>
+                <div class="mb-6">
+                  <label for="subject" class="block text-gray-700 dark:text-gray-300 font-medium mb-2">主题</label>
+                  <input type="text" id="subject" class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-dark dark:text-light focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors" placeholder="消息主题">
+                </div>
+                <div class="mb-6">
+                  <label for="message" class="block text-gray-700 dark:text-gray-300 font-medium mb-2">消息内容</label>
+                  <textarea id="message" rows="5" class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-dark dark:text-light focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors" placeholder="请详细描述您的需求或问题"></textarea>
+                </div>
+                <button type="submit" class="btn-primary text-white font-medium py-3 px-8 rounded-lg w-full">
+                  发送消息 <i class="fa fa-paper-plane ml-2"></i>
+                </button>
+              </form>
+            </div>
+          </div>
+          
+          <div class="animate-on-scroll" style="animation-delay: 0.3s">
+            <div class="bg-gradient-to-br from-primary/5 to-secondary/5 dark:from-primary/10 dark:to-secondary/10 rounded-2xl p-8 h-full">
+              <h3 class="font-display font-bold text-2xl mb-6">联系方式</h3>
+              <div class="space-y-6 mb-8">
+                <div class="flex items-start space-x-4">
+                  <div class="w-12 h-12 rounded-full bg-primary/10 dark:bg-primary/20 flex items-center justify-center flex-shrink-0">
+                    <i class="fa fa-map-marker text-primary text-xl"></i>
+                  </div>
+                  <div>
+                    <h4 class="font-bold text-lg mb-1">工作室地址</h4>
+                    <p class="text-gray-600 dark:text-gray-300">上海市浦东新区张江高科技园区博云路2号智慧大厦15层</p>
+                  </div>
+                </div>
+                
+                <div class="flex items-start space-x-4">
+                  <div class="w-12 h-12 rounded-full bg-primary/10 dark:bg-primary/20 flex items-center justify-center flex-shrink-0">
+                    <i class="fa fa-envelope text-primary text-xl"></i>
+                  </div>
+                  <div>
+                    <h4 class="font-bold text-lg mb-1">邮箱联系</h4>
+                    <p class="text-gray-600 dark:text-gray-300">contact@linyugamestudio.com</p>
+                    <p class="text-gray-600 dark:text-gray-300">business@linyugamestudio.com（商务合作）</p>
+                  </div>
+                </div>
+                
+              
+            
+              
+              
+              
+              <h3 class="font-display font-bold text-2xl mb-6">工作时间</h3>
+              <div class="text-gray-600 dark:text-gray-300 space-y-2">
+                <p>周一至周五: 9:00 - 18:00</p>
+                <p>周六: 10:00 - 16:00</p>
+                <p>周日及法定节假日: 休息</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+  
+  <!-- 页脚 -->
+  <footer class="bg-dark dark:bg-gray-900 text-white py-12">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8
